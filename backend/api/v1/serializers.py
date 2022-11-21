@@ -1,11 +1,11 @@
 from drf_base64.fields import Base64ImageField
+from recipes.models import (FavoriteRecipe, Ingredient, IngredientInRecipe,
+                            Recipe, Subscribe, Tag)
 from rest_framework.serializers import (CharField, CurrentUserDefault,
                                         EmailField, IntegerField,
                                         ModelSerializer, Serializer,
-                                        SlugRelatedField, ValidationError,
-                                        SerializerMethodField)
-from recipes.models import (FavoriteRecipe, Ingredient, IngredientInRecipe,
-                            Recipe, Subscribe, Tag)
+                                        SerializerMethodField,
+                                        SlugRelatedField, ValidationError)
 from users.models import User
 
 

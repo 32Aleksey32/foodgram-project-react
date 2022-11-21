@@ -1,10 +1,10 @@
+from colorfield.fields import ColorField
+from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
 from django.db.models import (CASCADE, CharField, DateTimeField, ForeignKey,
                               ImageField, ManyToManyField, Model,
                               PositiveSmallIntegerField, SlugField, TextField,
                               UniqueConstraint)
-from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
-from colorfield.fields import ColorField
 
 User = get_user_model()
 

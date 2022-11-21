@@ -1,5 +1,5 @@
-from django.db.models import CharField, EmailField
 from django.contrib.auth.models import AbstractUser
+from django.db.models import CharField, EmailField
 
 
 class User(AbstractUser):

@@ -1,28 +1,28 @@
 import io
-from django.shortcuts import get_object_or_404
+
 from django.db.models.aggregates import Sum
 from django.http import FileResponse
+from django.shortcuts import get_object_or_404
+from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
+                            Subscribe, Tag)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
-from rest_framework.response import Response
+from rest_framework import status, views, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework import status, viewsets, views
-from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
-                            Subscribe, Tag)
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
 from users.models import User
-from .permissions import IsAdminOrReadOnly
-from .serializers import (IngredientSerializer, TagSerializer,
-                          RecipeCreateSerializer, RecipeReadSerializer,
-                          SubscribeSerializer, UserSerializer,
-                          UserCreateSerializer, TokenSerializer,
-                          UniversalSerializer)
-from .filters import IngredientFilter, RecipeFilter
 
+from .filters import IngredientFilter, RecipeFilter
+from .permissions import IsAdminOrReadOnly
+from .serializers import (IngredientSerializer, RecipeCreateSerializer,
+                          RecipeReadSerializer, SubscribeSerializer,
+                          TagSerializer, TokenSerializer, UniversalSerializer,
+                          UserCreateSerializer, UserSerializer)
 
 FILENAME = 'shopping_cart.pdf'
 
@@ -124,56 +124,46 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeCreateSerializer
         return RecipeReadSerializer
 
+    def add_recipe(self, model, request, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        models = model.objects.filter(author=request.user, recipe=recipe)
+        if models.exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        model(author=request.user, recipe=recipe).save()
+        serializer = UniversalSerializer(recipe)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def del_recipe(self, model, request, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        models = model.objects.filter(author=request.user, recipe=recipe)
+        if models.exists():
+            models.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
     @action(
         detail=True,
         methods=['POST', 'DELETE'],
         url_path='favorite',
-        permission_classes=[IsAuthenticatedOrReadOnly],
+        permission_classes=[IsAuthenticatedOrReadOnly]
     )
-    def favorite_recipe(self, request, pk=None):
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=pk)
-        favorite = FavoriteRecipe.objects.filter(author=user, recipe=recipe)
+    def favorite(self, request, **kwargs):
         if request.method == 'POST':
-            if favorite.exists():
-                msg = {
-                    'error': 'Вы не можете снова добавить рецепт в избранное.'
-                }
-                return Response(msg, status=status.HTTP_400_BAD_REQUEST)
-            FavoriteRecipe(author=user, recipe=recipe).save()
-            serializer = UniversalSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if not favorite.exists():
-            msg = {'error': 'Этот рецепт не входит в избранное.'}
-            return Response(msg, status=status.HTTP_400_BAD_REQUEST)
-        favorite.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            return self.add_recipe(FavoriteRecipe, request, kwargs.get('pk'))
+        if request.method == 'DELETE':
+            return self.del_recipe(FavoriteRecipe, request, kwargs.get('pk'))
 
     @action(
         detail=True,
         methods=['POST', 'DELETE'],
         url_path='shopping_cart',
-        permission_classes=[IsAuthenticatedOrReadOnly],
+        permission_classes=[IsAuthenticatedOrReadOnly]
     )
-    def shopping_cart(self, request, pk=None):
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=pk)
-        shopping_cart = ShoppingCart.objects.filter(author=user, recipe=recipe)
+    def shopping_cart(self, request, **kwargs):
         if request.method == 'POST':
-            if shopping_cart.exists():
-                msg = {
-                    'error': 'Вы не можете снова добавить рецепт '
-                             'в список покупок.'
-                }
-                return Response(msg, status=status.HTTP_400_BAD_REQUEST)
-            ShoppingCart(author=user, recipe=recipe).save()
-            serializer = UniversalSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if not shopping_cart.exists():
-            msg = {'error': 'Этого рецепта нет в Вашем списке покупок'}
-            return Response(msg, status=status.HTTP_400_BAD_REQUEST)
-        shopping_cart.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            return self.add_recipe(ShoppingCart, request, kwargs.get('pk'))
+        if request.method == 'DELETE':
+            return self.delete_recipe(ShoppingCart, request, kwargs.get('pk'))
 
     @action(
         detail=False,
@@ -190,7 +180,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             values(
                 'ingredients__name',
                 'ingredients__measurement_unit'
-            ).annotate(amount=Sum('recipe__amount')).order_by())
+            ).annotate(amount_ingredients=Sum('recipe__amount')).order_by())
         page.setFont('Vera', 14)
         if shopping_cart:
             indent = 20
