@@ -136,10 +136,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def del_recipe(self, model, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         models = model.objects.filter(author=request.user, recipe=recipe)
-        if models.exists():
-            models.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        if not models.exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        models.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=True,
@@ -150,7 +150,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, **kwargs):
         if request.method == 'POST':
             return self.add_recipe(FavoriteRecipe, request, kwargs.get('pk'))
-        elif request.method == 'DELETE':
+        if request.method == 'DELETE':
             return self.del_recipe(FavoriteRecipe, request, kwargs.get('pk'))
 
     @action(
@@ -162,7 +162,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, **kwargs):
         if request.method == 'POST':
             return self.add_recipe(ShoppingCart, request, kwargs.get('pk'))
-        elif request.method == 'DELETE':
+        if request.method == 'DELETE':
             return self.del_recipe(ShoppingCart, request, kwargs.get('pk'))
 
     @action(
