@@ -204,7 +204,10 @@ class RecipeCreateSerializer(ModelSerializer):
 
 class SubscribeSerializer(UserSerializer):
     recipes = SerializerMethodField()
-    recipes_count = SerializerMethodField(read_only=True)
+    recipes_count = SerializerMethodField(
+        source='author.recipes.count',
+        read_only=True
+    )
     is_subscribed = SerializerMethodField()
 
     class Meta:
@@ -217,10 +220,6 @@ class SubscribeSerializer(UserSerializer):
             'email', 'id', 'username', 'first_name', 'last_name',
             'is_subscribed', 'recipes', 'recipes_count'
         )
-
-    def get_recipes_count(self, obj):
-        queryset = Recipe.objects.filter(author=obj.id).count()
-        return queryset
 
     def validate(self, attrs):
         user = self.initial_data.get('user')
@@ -235,6 +234,9 @@ class SubscribeSerializer(UserSerializer):
             if not subscription.exists():
                 raise ValidationError('Вы не подписаны на этого автора')
         return attrs
+
+    def get_is_subscribed(self, username):
+        return True
 
     def to_internal_value(self, data):
         super().to_internal_value(data)
