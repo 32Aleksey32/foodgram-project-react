@@ -27,7 +27,7 @@ jobs:
       run: |
         python -m flake8
 
-  build_and_push_foodgram_backend_to_docker_hub:
+  build_and_push_foodgram_project_to_docker_hub:
       name: Push Docker image to Docker Hub
       runs-on: ubuntu-latest
       needs: tests
@@ -48,11 +48,11 @@ jobs:
             push: true
             tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
         - name: Push frontend to Docker Hub
-            uses: docker/build-push-action@v2
-            with:
-              context: frontend/
-              push: true
-              tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
+          uses: docker/build-push-action@v2
+          with:
+            context: frontend/
+            push: true
+            tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
 
   deploy:
     if: github.ref == 'refs/heads/master'
