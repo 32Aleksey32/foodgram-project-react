@@ -54,7 +54,7 @@
   ```
   Workflow состоит из четырёх шагов:
     - `tests`: установка зависимостей, запуск flake8 и pytest
-    - `build_and_push_foodgram_project_to_docker_hub`: создание образов foodgram_backend и foodgram-frontend и загрузка их в свой репозиторий на DockerHub
+    - `build_and_push_to_docker_hub`: создание образов foodgram_backend и foodgram-frontend и загрузка их в свой репозиторий на DockerHub
     - `deploy`: развертывание проекта на удаленном сервере
     - `send_message`: отправка сообщения в чат Telegram при успешном выполнении workflow в GitHub Actions
 
