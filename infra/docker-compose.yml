@@ -9,7 +9,7 @@ services:
       - ./.env
 
   backend:
-    image: aleksey32/foodgram-backend:latest
+    image: aleksey32/foodgram_backend:latest
     restart: always
     volumes:
       - static_value:/app/static/
@@ -20,7 +20,7 @@ services:
       - ./.env
 
   frontend:
-    image: aleksey32/foodgram-frontend:latest
+    image: aleksey32/foodgram_frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
