@@ -136,10 +136,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def del_recipe(self, model, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         models = model.objects.filter(author=request.user, recipe=recipe)
-        if not models.exists():
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        models.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        if models.exists():
+            models.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=True,
