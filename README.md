@@ -3,7 +3,7 @@
 ## Спринт 17 - Продуктовый помощник Foodgram
 
 ### Ip сервера:
-- 84.252.143.109
+- 158.160.15.11
 
 ### Описание проекта:
 «Продуктовый помощник»: приложение, в котором пользователи могут публиковать рецепты,
@@ -81,28 +81,28 @@
 - После успешной сборки выполните следующие действия (только при первом деплое):
     * проведите миграции внутри контейнеров:
       ```bash
-      docker-compose exec web python manage.py makemigrations reviews
-      docker-compose exec web python manage.py migrate
+      sudo docker-compose exec backend  python manage.py makemigrations
+      sudo docker-compose exec backend  python manage.py migrate
       ```
     * заполните базу данных ингредиентами:
       ```bash
-      docker-compose exec backend python manage.py load_ingredients
+      sudo docker-compose exec backend python manage.py load_ingredients
       ```  
     * соберите статику проекта:
       ```bash
-      docker-compose exec web python manage.py collectstatic --no-input
+      sudo docker-compose exec backend  python manage.py collectstatic --no-input
       ```  
     * создайте суперпользователя Django:
       ```bash
-      docker-compose exec web python manage.py createsuperuser
+      sudo docker-compose exec backend  python manage.py createsuperuser
       ```
 - Запустите сервер:
   ```bash
-  docker-compose exec web python manage.py runserver
+  sudo docker-compose exec backend python manage.py runserver
   ```
 
 ### Команды для заполнения базы данными
 - Создайте резервную копию данных:
   ```bash
-  docker-compose exec web python manage.py dumpdata > fixtures.json
+  sudo docker-compose exec web python manage.py dumpdata > fixtures.json
   ```
