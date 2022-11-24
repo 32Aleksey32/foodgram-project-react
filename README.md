@@ -18,7 +18,7 @@
 - Docker
 - PostgreSQL
 
-### Как запустить проект:
+### Как установить проект:
 - Клонируйте репозиторий с проектом на свой компьютер:
     ```
     git clone https://github.com/genpoplevin/foodgram-project-react.git
@@ -66,16 +66,17 @@
   ```
 - Установите docker-compose на сервер:
   ```bash
-  curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-  chmod +x /usr/local/bin/docker-compose
+  sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  sudo chmod +x /usr/local/bin/docker-compose
   ```
-- Остановите службу nginx командой
+- Чтобы проверить, прошла ли установка успешно, выполните следующую команду:
   ```bash
-  sudo systemctl stop nginx
+  sudo docker-compose --version
   ```
+
 - Соберите и запустите контейнеры на сервере:
   ```bash
-  docker-compose up -d --build
+  sudo docker-compose up -d --build
   ```
 
 - После успешной сборки выполните следующие действия (только при первом деплое):
