@@ -37,7 +37,7 @@ class UserCreateSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'email', 'id', 'username',
+            'email', 'username',
             'first_name', 'last_name', 'password',
         )
 
@@ -54,6 +54,21 @@ class UserCreateSerializer(ModelSerializer):
                 "Пользователь с таким юзернеймом уже существует."
             )
         return data
+
+    def create(self, validated_data):
+        user = super().create(validated_data)
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
+    def update(self, instance, validated_data):
+        user = super().update(instance, validated_data)
+        try:
+            user.set_password(validated_data['password'])
+            user.save()
+        except KeyError:
+            pass
+        return user
 
 
 class TokenSerializer(Serializer):
