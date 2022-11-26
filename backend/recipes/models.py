@@ -118,7 +118,6 @@ class Recipe(Model):
 
 
 class IngredientInRecipe(Model):
-    """Ингредиентов в рецепте."""
     amount = PositiveSmallIntegerField(
         'Количество в рецепте',
         default=0,
@@ -138,7 +137,7 @@ class IngredientInRecipe(Model):
     )
 
     class Meta:
-        ordering = ['-id']
+        ordering = ['ingredient']
         verbose_name = 'Количество ингредиента'
         verbose_name_plural = 'Количество ингредиентов'
         constraints = (
@@ -149,7 +148,7 @@ class IngredientInRecipe(Model):
         )
 
     def __str__(self):
-        return f'{self.ingredient}'
+        return f'{self.ingredient.name}'
 
 
 class Subscribe(Model):

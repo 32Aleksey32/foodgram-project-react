@@ -84,8 +84,8 @@
 - После успешной сборки выполните следующие действия (только при первом деплое):
     * проведите миграции внутри контейнеров:
       ```bash
-      sudo docker-compose exec backend  python manage.py makemigrations
-      sudo docker-compose exec backend  python manage.py migrate
+      sudo docker-compose exec backend python manage.py makemigrations
+      sudo docker-compose exec backend python manage.py migrate
       ```
     * заполните базу данных ингредиентами:
       ```bash
@@ -93,19 +93,9 @@
       ```  
     * соберите статику проекта:
       ```bash
-      sudo docker-compose exec backend  python manage.py collectstatic --no-input
+      sudo docker-compose exec backend python manage.py collectstatic --no-input
       ```  
     * создайте суперпользователя Django:
       ```bash
-      sudo docker-compose exec backend  python manage.py createsuperuser
+      sudo docker-compose exec backend python manage.py createsuperuser
       ```
-- Запустите сервер:
-  ```bash
-  sudo docker-compose exec backend python manage.py runserver
-  ```
-
-### Команды для заполнения базы данными
-- Создайте резервную копию данных:
-  ```bash
-  sudo docker-compose exec web python manage.py dumpdata > fixtures.json
-  ```

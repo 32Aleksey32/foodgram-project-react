@@ -1,16 +1,17 @@
-from django.db.models.aggregates import Sum
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (FavoriteRecipe, Ingredient, IngredientInRecipe,
-                            Recipe, ShoppingCart, Subscribe, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
+
+from recipes.models import (FavoriteRecipe, Ingredient, IngredientInRecipe,
+                            Recipe, ShoppingCart, Subscribe, Tag)
 from users.models import User
 
 from .filters import IngredientFilter, RecipeFilter
@@ -155,6 +156,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             text_cart += (
                 value['ingredient__name'] + ' - '
                 + str(value['amount__sum']) + ' '
-                + value['ingredient__measurement_unit'] + '<br />'
+                + value['ingredient__measurement_unit'] + '<br/>'
             )
         return pdf_generate(text_cart, response)

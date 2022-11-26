@@ -1,9 +1,10 @@
 from drf_base64.fields import Base64ImageField
-from recipes.models import (Ingredient, IngredientInRecipe, Recipe, Subscribe,
-                            Tag)
 from rest_framework.serializers import (CharField, EmailField, IntegerField,
                                         ModelSerializer, ReadOnlyField,
                                         SerializerMethodField, ValidationError)
+
+from recipes.models import (Ingredient, IngredientInRecipe, Recipe, Subscribe,
+                            Tag)
 from users.models import User
 
 
@@ -64,17 +65,6 @@ class UserCreateSerializer(ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
-
-
-# class TokenSerializer(Serializer):
-#     email = CharField(
-#         label='Электронная почта',
-#         required=True,
-#     )
-#     password = CharField(
-#         label='Пароль',
-#         style={'input_type': 'password'}
-#     )
 
 
 class TagSerializer(ModelSerializer):
@@ -220,13 +210,13 @@ class RecipeCreateSerializer(ModelSerializer):
         return recipe
 
     def update(self, recipe, validated_data):
-        if 'ingredients' in validated_data:
-            ingredients = validated_data.pop('ingredients')
-            recipe.ingredients.clear()
-            self.create_ingredients(ingredients, recipe)
-        if 'tags' in validated_data:
-            tags = validated_data.pop('tags')
-            recipe.tags.set(tags)
+        recipe.ingredients.clear()
+        recipe.tags.clear()
+        ingredients = self.initial_data.get('ingredients')
+        tags = validated_data.pop('tags')
+        recipe.tags.set(tags)
+        IngredientInRecipe.objects.filter(recipe=recipe).all().delete()
+        self.create_ingredients(ingredients, recipe)
         return super().update(recipe, validated_data)
 
     def to_representation(self, instance):
