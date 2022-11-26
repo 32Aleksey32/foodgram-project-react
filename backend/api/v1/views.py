@@ -1,24 +1,24 @@
 from django.db.models.aggregates import Sum
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet
 from recipes.models import (FavoriteRecipe, Ingredient, IngredientInRecipe,
                             Recipe, ShoppingCart, Subscribe, Tag)
-from rest_framework import mixins, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from users.models import User
-from .filters import RecipeFilter, IngredientFilter
+
+from .filters import IngredientFilter, RecipeFilter
+from .pdf_generate import pdf_generate
 from .permissions import IsAdminOrAuthorOrReadOnly
 from .serializers import (IngredientSerializer, RecipeCreateSerializer,
                           RecipeReadSerializer, SubscribeSerializer,
                           TagSerializer, UniversalSerializer)
-from djoser.views import UserViewSet
-from django_filters.rest_framework import DjangoFilterBackend
-from .pdf_generate import pdf_generate
-from django.http import HttpResponse
-from rest_framework.filters import SearchFilter
 
 
 class CustomUserViewSet(UserViewSet):
@@ -81,6 +81,7 @@ class IngredientViewSet(viewsets.ModelViewSet):
     filter_backends = (IngredientFilter,)
     search_fields = ('^name',)
     pagination_class = None
+
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
