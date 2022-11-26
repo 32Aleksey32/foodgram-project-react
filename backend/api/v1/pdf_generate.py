@@ -19,7 +19,7 @@ def pdf_generate(text, response):
         fontName='Open Sans',
         fontSize=15,
         leading=20,
-        backColor=colors.blueviolet,
+        backColor=colors.orange,
         textColor=colors.white,
         alignment=TA_CENTER)
     )
@@ -40,6 +40,7 @@ def pdf_generate(text, response):
 
     pdf = SimpleDocTemplate(
         response,
+        title='Список ингредиентов',
         pagesize=A4,
         rightMargin=2 * cm,
         leftMargin=2 * cm,
@@ -48,8 +49,6 @@ def pdf_generate(text, response):
     )
     pdf_generate = []
     text_title = 'Ингредиенты:'
-    pdf_generate.append(Paragraph(styles['Ingredient']))
-    pdf_generate.append(Spacer(1, 1))
     pdf_generate.append(Paragraph(text_title, styles['Top Recipe']))
     pdf_generate.append(Spacer(1, 24))
     pdf_generate.append(Paragraph(text, styles['Ingredient']))

@@ -229,6 +229,13 @@ class RecipeCreateSerializer(ModelSerializer):
             recipe.tags.set(tags)
         return super().update(recipe, validated_data)
 
+    def to_representation(self, instance):
+        data = RecipeReadSerializer(
+            instance,
+            context={'request': self.context.get('request')}
+        ).data
+        return data
+
 
 class UniversalSerializer(ModelSerializer):
 

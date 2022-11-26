@@ -147,14 +147,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'
-        ).annotate(amount_ingredients=Sum('amount'))
+        ).annotate(Sum('amount'))
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment;'
         text_cart = ''
         for value in get_cart:
             text_cart += (
                 value['ingredient__name'] + ' - '
-                + str('amount_ingredients') + ' '
+                + str(value['amount__sum']) + ' '
                 + value['ingredient__measurement_unit'] + '<br />'
             )
         return pdf_generate(text_cart, response)
