@@ -4,13 +4,18 @@ services:
   db:
     image: postgres:13.0-alpine
     volumes:
-      - - postgres_data:/var/lib/postgresql/data/
+      - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./.env
 
   backend:
     image: aleksey32/foodgram_backend:latest
     restart: always
+    command: >
+      bash -c "python manage.py makemigrations &&
+      python manage.py migrate &&
+      python manage.py collectstatic --noinput &&
+      gunicorn --bind 0:8000 foodgram.wsgi"
     volumes:
       - static_value:/app/static/
       - media_value:/app/media/
@@ -37,7 +42,7 @@ services:
       - static_value:/var/html/static/
       - media_value:/var/html/media/
     depends_on:
-      - frontend
+      - backend
 
 volumes:
   static_value:

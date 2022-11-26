@@ -162,7 +162,7 @@ class Subscribe(Model):
     author = ForeignKey(
         User,
         on_delete=CASCADE,
-        related_name='subscription',
+        related_name='subscribed',
         verbose_name='Автор',
     )
     pub_date = DateTimeField(

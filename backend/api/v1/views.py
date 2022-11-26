@@ -1,41 +1,29 @@
-import io
-
 from django.db.models.aggregates import Sum
-from django.http import FileResponse
 from django.shortcuts import get_object_or_404
-from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
-                            Subscribe, Tag)
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen import canvas
-from rest_framework import status, views, viewsets
-from rest_framework.authtoken.models import Token
+from recipes.models import (FavoriteRecipe, Ingredient, IngredientInRecipe,
+                            Recipe, ShoppingCart, Subscribe, Tag)
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
+from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from users.models import User
-
-from .filters import IngredientFilter, RecipeFilter
-from .permissions import IsAdminOrReadOnly
+from .filters import RecipeFilter, IngredientFilter
+from .permissions import IsAdminOrAuthorOrReadOnly
 from .serializers import (IngredientSerializer, RecipeCreateSerializer,
                           RecipeReadSerializer, SubscribeSerializer,
-                          TagSerializer, TokenSerializer, UniversalSerializer,
-                          UserCreateSerializer, UserSerializer)
+                          TagSerializer, UniversalSerializer)
+from djoser.views import UserViewSet
+from django_filters.rest_framework import DjangoFilterBackend
+from .pdf_generate import pdf_generate
+from django.http import HttpResponse
+from rest_framework.filters import SearchFilter
 
-FILENAME = 'shopping_cart.pdf'
 
-
-class UserViewSet(viewsets.ModelViewSet):
+class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
     pagination_class = PageNumberPagination
-    permission_classes = (IsAuthenticated,)
-
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return UserCreateSerializer
-        return UserSerializer
 
     @action(
         detail=True,
@@ -43,12 +31,9 @@ class UserViewSet(viewsets.ModelViewSet):
         url_path='subscribe',
         permission_classes=[IsAuthenticatedOrReadOnly],
     )
-    def subscribe(self, request, id=None):
-        user = get_object_or_404(User, id=id)
-        subscribe = Subscribe.objects.filter(
-            user=request.user,
-            author=user
-        )
+    def subscribe(self, request, **kwargs):
+        user = get_object_or_404(User, id=kwargs.get('id'))
+        subscribe = Subscribe.objects.filter(user=request.user, author=user)
         if request.method == 'POST':
             if user == request.user:
                 msg = {'error': 'Нельзя подписаться на самого себя.'}
@@ -62,7 +47,6 @@ class UserViewSet(viewsets.ModelViewSet):
                 return Response(msg, status=status.HTTP_400_BAD_REQUEST)
             serializer = SubscribeSerializer(obj, context={'request': request})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
         if not subscribe.exists():
             msg = {'error': 'Вы не подписаны на этого пользователя.'}
             return Response(msg, status=status.HTTP_400_BAD_REQUEST)
@@ -75,49 +59,35 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticatedOrReadOnly],
     )
     def subscriptions(self, request):
-        pages = self.paginate_queryset(
-            Subscribe.objects.filter(user=request.user)
-        )
+        subscribe = Subscribe.objects.filter(user=request.user)
+        pages = self.paginate_queryset(subscribe)
         serializer = SubscribeSerializer(
             pages, many=True, context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
 
 
-class TokenView(views.APIView):
-    serializer_class = TokenSerializer
-    permission_classes = (AllowAny,)
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = get_object_or_404(
-            User,
-            email=serializer.validated_data.get('email'),
-            password=serializer.validated_data.get('password')
-        )
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key}, status=status.HTTP_201_CREATED)
-
-
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    pagination_class = None
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filterset_class = IngredientFilter
-
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    filter_backends = (IngredientFilter,)
+    search_fields = ('^name',)
+    pagination_class = None
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     pagination_class = PageNumberPagination
     filterset_class = RecipeFilter
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAdminOrAuthorOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
 
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PATCH', 'PUT']:
@@ -171,35 +141,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
-        buffer = io.BytesIO()
-        page = canvas.Canvas(buffer)
-        pdfmetrics.registerFont(TTFont('Vera', 'Vera.ttf'))
-        x_position, y_position = 50, 800
-        shopping_cart = (
-            request.user.is_in_shopping_cart.recipe.
-            values(
-                'ingredients__name',
-                'ingredients__measurement_unit'
-            ).annotate(amount_ingredients=Sum('recipe__amount')).order_by())
-        page.setFont('Vera', 14)
-        if shopping_cart:
-            indent = 20
-            page.drawString(x_position, y_position, 'Список покупок:')
-            for index, recipe in enumerate(shopping_cart, start=1):
-                page.drawString(
-                    x_position, y_position - indent,
-                    f'{index}. {recipe["ingredients__name"]} - '
-                    f'{recipe["amount"]} '
-                    f'{recipe["ingredients__measurement_unit"]}.')
-                y_position -= 15
-                if y_position <= 50:
-                    page.showPage()
-                    y_position = 800
-            page.save()
-            buffer.seek(0)
-            return FileResponse(buffer, as_attachment=True, filename=FILENAME)
-        page.setFont('Vera', 24)
-        page.drawString(x_position, y_position, 'Список покупок пуст!')
-        page.save()
-        buffer.seek(0)
-        return FileResponse(buffer, as_attachment=True, filename=FILENAME)
+        get_cart = IngredientInRecipe.objects.filter(
+            recipe__is_in_shopping_cart__author=request.user
+        ).values(
+            'ingredient__name',
+            'ingredient__measurement_unit'
+        ).annotate(amount_ingredients=Sum('amount'))
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment;'
+        text_cart = ''
+        for value in get_cart:
+            text_cart += (
+                value['ingredient__name'] + ' - '
+                + str('amount_ingredients') + ' '
+                + value['ingredient__measurement_unit'] + '<br />'
+            )
+        return pdf_generate(text_cart, response)

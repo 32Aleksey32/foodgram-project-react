@@ -1,15 +1,5 @@
-version: '3.3'
+version: '3.8'
 services:
-
-  backend:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
-      args:
-        - biuldno=0.8
-    volumes:
-      - static_value:/app/static/
-      - media_value:/app/media/
 
   frontend:
     build:
@@ -33,11 +23,27 @@ services:
     image: postgres:13.0-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    environment:
+    env_file:
+      - ./.env
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    command: >
+      bash -c "python manage.py makemigrations &&
+      python manage.py migrate &&
+      python manage.py collectstatic --noinput &&
+      gunicorn --bind 0:8000 foodgram.wsgi"
+    volumes:
+      - static_value:/app/static/
+      - media_value:/app/media/
+    depends_on:
+      - db
+    env_file:
       - ./.env
 
 volumes:
   static_value:
   media_value:
   postgres_data:
-
