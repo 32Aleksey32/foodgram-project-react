@@ -5,7 +5,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
@@ -20,11 +19,12 @@ from .permissions import IsAdminOrAuthorOrReadOnly
 from .serializers import (IngredientSerializer, RecipeCreateSerializer,
                           RecipeReadSerializer, SubscribeSerializer,
                           TagSerializer, UniversalSerializer)
+from .pagination import LimitPagination
 
 
 class CustomUserViewSet(UserViewSet):
     queryset = User.objects.all()
-    pagination_class = PageNumberPagination
+    pagination_class = LimitPagination
 
     @action(
         detail=True,
@@ -72,7 +72,6 @@ class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    pagination_class = None
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
@@ -81,12 +80,11 @@ class IngredientViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     filter_backends = (IngredientFilter,)
     search_fields = ('^name',)
-    pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    pagination_class = PageNumberPagination
+    pagination_class = LimitPagination
     filterset_class = RecipeFilter
     permission_classes = (IsAdminOrAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
@@ -129,7 +127,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=True,
         methods=['POST', 'DELETE'],
         url_path='shopping_cart',
-        permission_classes=[IsAuthenticatedOrReadOnly]
+        permission_classes=[IsAuthenticatedOrReadOnly],
     )
     def shopping_cart(self, request, **kwargs):
         if request.method == 'POST':
@@ -140,7 +138,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=['GET'],
-        permission_classes=(IsAuthenticated,)
+        permission_classes=(IsAuthenticated,),
     )
     def download_shopping_cart(self, request):
         get_cart = IngredientInRecipe.objects.filter(
