@@ -1,10 +1,9 @@
 from drf_base64.fields import Base64ImageField
+from recipes.models import (Ingredient, IngredientInRecipe, Recipe, Subscribe,
+                            Tag)
 from rest_framework.serializers import (CharField, EmailField, IntegerField,
                                         ModelSerializer, ReadOnlyField,
                                         SerializerMethodField, ValidationError)
-
-from recipes.models import (Ingredient, IngredientInRecipe, Recipe, Subscribe,
-                            Tag)
 from users.models import User
 
 

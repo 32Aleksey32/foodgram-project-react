@@ -1,4 +1,5 @@
 import reportlab
+from foodgram.settings import MEDIA_ROOT
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
@@ -7,8 +8,6 @@ from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
-
-from foodgram.settings import MEDIA_ROOT
 
 
 def pdf_generate(text, response):
