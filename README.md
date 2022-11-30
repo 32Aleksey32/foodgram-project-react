@@ -1,11 +1,9 @@
 ![example workflow](https://github.com/32aleksey32/foodgram-project-react/actions/workflows/main.yml/badge.svg)
-#foodgram-project-react - Дипломный проект в Яндекс.Практикум
+##foodgram-project-react - Дипломный проект в Яндекс.Практикум
 ## Спринт 17 - Продуктовый помощник Foodgram
 
 ### Ip сервера:
 - 51.250.97.124
-### Логин и пароль
-- admin
 
 ### Описание проекта:
 «Продуктовый помощник»: приложение, в котором пользователи могут публиковать рецепты,
