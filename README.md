@@ -21,7 +21,7 @@
 ### Как установить проект:
 - Клонируйте репозиторий с проектом на свой компьютер:
     ```
-    git clone https://github.com/genpoplevin/foodgram-project-react.git
+    git clone https://github.com/32Aleksey32/foodgram-project-react.git
     ```
 - Локально отредактируйте файл infra/nginx.conf, обязательно в строке server_name вписать IP-адрес сервера
 
